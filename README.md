@@ -124,7 +124,4 @@ More flexible rescheduling and cancellations
 Persistent memory with a database
 
 🧑‍💻 Author
-Aditya Katara
-📍 Delhi, India
-🎓 B.Tech @ JUIT Solan
-✉️ ak.vkatara@gmail.com
+✉️ theodricknight0@gmail.com
