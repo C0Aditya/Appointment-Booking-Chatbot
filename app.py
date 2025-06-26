@@ -21,7 +21,7 @@ if st.button("Send") and user_input:
 
     try:
         res = requests.post(
-            "http://localhost:8000/chat,
+            "http://localhost:8000/chat",
             json={"user_id": st.session_state.user_id, "message": user_input}
         )
 
