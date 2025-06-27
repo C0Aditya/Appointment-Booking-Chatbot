@@ -4,7 +4,7 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 # If you set a different filename, update here
-SERVICE_ACCOUNT_FILE = os.getenv("credentials", "credentials.json")
+SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE", "service-account.json")
 SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
 CALENDAR_ID = os.getenv("CALENDAR_ID", "primary")
 
