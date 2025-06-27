@@ -1,41 +1,52 @@
 import streamlit as st
-import requests
 import uuid
+from agent import flow
 
-st.title("TailorTalk - Booking Assistant")
+# Page config
+st.set_page_config(page_title="TailorTalk - Booking Assistant", layout="centered")
+st.title("🧵 TailorTalk - Booking Assistant")
 
-# Initialize chat history and user ID
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
+# Initialize session state
 if "user_id" not in st.session_state:
-    # Auto-generate a simple unique ID per user session
     st.session_state.user_id = str(uuid.uuid4())[:8]
 
-st.write(f"**Your User ID:** `{st.session_state.user_id}`")
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-user_input = st.text_input("You:", "")
+if "conversation_state" not in st.session_state:
+    st.session_state.conversation_state = {
+        "message": "",
+        "last_start_end": None,
+    }
 
-if st.button("Send") and user_input:
-    st.session_state.messages.append(("You", user_input))
+# Display user ID
+st.markdown(f"**Your User ID:** `{st.session_state.user_id}`")
 
-    try:
-        res = requests.post(
-            "http://localhost:8000/chat",
-            json={"user_id": st.session_state.user_id, "message": user_input}
-        )
+# Input form
+with st.form(key="chat_form", clear_on_submit=True):
+    user_input = st.text_input("You:")
+    send = st.form_submit_button("Send")
 
-        if res.status_code == 200:
-            bot_response = res.json().get("response", "Sorry, no response.")
-        else:
-            bot_response = f"Server error: {res.status_code}"
+if send and user_input.strip():
+    # Add user message
+    st.session_state.chat_history.append(("You", user_input))
+    # Update LangGraph state
+    st.session_state.conversation_state["message"] = user_input
 
-    except Exception as e:
-        bot_response = f"Error contacting server: {e}"
+    # Run through the LangGraph flow
+    last_bot = "Sorry, I couldn't process that."
+    events = flow.stream(st.session_state.conversation_state)
+    for ev in events:
+        node_state = next(iter(ev.values()))
+        if "message" in node_state:
+            last_bot = node_state["message"]
+        st.session_state.conversation_state = node_state  # update state
 
-    st.session_state.messages.append(("Bot", bot_response))
+    # Add bot response
+    st.session_state.chat_history.append(("Bot", last_bot))
+    st.experimental_rerun()
 
-# Display chat history
-st.write("---")
-for sender, message in st.session_state.messages:
-    st.markdown(f"**{sender}:** {message}")
+# Render chat history
+st.markdown("---")
+for speaker, text in st.session_state.chat_history:
+    st.markdown(f"**{speaker}:** {text}")
